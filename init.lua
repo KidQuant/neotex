@@ -160,3 +160,6 @@ if not bootstrap_ok then
 		pcall(require, "lazy")
 	end
 end
+
+vim.g.vimtex_view_method = "sioyek"
+vim.g.vimtex_compiler_progname = "nvr"
