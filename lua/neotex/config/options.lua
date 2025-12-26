@@ -84,6 +84,10 @@ function M.setup()
 		vim.opt[k] = v
 	end
 
+	-- THESAURUS (Vim-format synonym list)
+	vim.opt.thesaurus = {
+		vim.fn.expand("~/.config/neotex/thesaurus/mthesaur.txt"),
+	}
 	-- Disable Ctrl+click tag jumping for markdown files
 	vim.api.nvim_create_autocmd({ "FileType" }, {
 		pattern = { "markdown", "lectic.markdown" },

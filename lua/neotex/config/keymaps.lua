@@ -272,6 +272,22 @@ function M.setup()
 	map("n", "gc", "<nop>", {}, "Disable gc mappings")
 	map("n", "gcc", "<nop>", {}, "Disable gcc mappings")
 
+	-- Popup-menu (completion) navigation in the INSERT mode
+	-- When the completion dropdown is visible, use C-j/C-j to move down/up.
+	vim.keymap.set("i", "<C-j>", function()
+		if vim.fn.pumvisible() == 1 then
+			return "<C-n>" -- next completion item
+		end
+		return "<C-j>"
+	end, { expr = true, noremap = true, silent = true, desc = "PUM down (C-n)" })
+
+	vim.keymap.set("i", "<C-k>", function()
+		if vim.fn.pumvisible() == 1 then
+			return "<C-p>" -- previous completion item
+		end
+		return "<C-k>"
+	end, { expr = true, noremap = true, silent = true, desc = "PUM up (C-p)" })
+
 	-- Terminal window management
 	-- map("n", "<C-t>", "<cmd>ToggleTerm<CR>", { remap = true }, "Toggle terminal")
 	-- map("t", "<C-t>", "<cmd>ToggleTerm<CR>", { remap = true }, "Toggle terminal")
@@ -284,7 +300,100 @@ function M.setup()
 			layout_config = { width = 50, height = 15 },
 		}))
 	end, { remap = true }, "Spelling suggestions")
+	--
+	-- Synonyms via thesaurus file + Telescope picker
+	local function _escape_rg_regex(s)
+		return (s:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "\\%1"))
+	end
 
+	local function _get_thesaurus_file()
+		local t = vim.opt.thesaurus:get()
+		if type(t) == "table" then
+			return t[1]
+		end
+		return t
+	end
+
+	local function _thesaurus_synonyms(word)
+		local file = _get_thesaurus_file()
+		if not file or file == "" then
+			vim.notify("No 'thesaurus' file set (vim.opt.thesaurus).", vim.log.levels.WARN)
+			return {}
+		end
+		if vim.fn.filereadable(file) ~= 1 then
+			vim.notify("Thesaurus file not readable: " .. file, vim.log.levels.WARN)
+			return {}
+		end
+
+		-- Fast lookup using ripgrep (Telescope configs almost always have it)
+		if vim.fn.executable("rg") == 1 then
+			local pat = "^" .. _escape_rg_regex(word) .. "[, ]"
+			local cmd = { "rg", "-i", "--no-line-number", pat, file }
+			local out = vim.fn.systemlist(cmd)
+			if #out == 0 then
+				return {}
+			end
+
+			-- Moby format is typically: "word, syn1, syn2, ..."
+			local line = out[1]
+			local parts = vim.split(line, ",")
+			local results = {}
+			for i = 2, #parts do
+				local w = vim.trim(parts[i])
+				if w ~= "" then
+					table.insert(results, w)
+				end
+			end
+			return results
+		end
+
+		vim.notify("rg not found; install ripgrep for fast thesaurus lookup.", vim.log.levels.WARN)
+		return {}
+	end
+
+	local function _replace_cword(repl)
+		local keys = vim.api.nvim_replace_termcodes("ciw" .. repl .. "<Esc>", true, false, true)
+		vim.api.nvim_feedkeys(keys, "n", false)
+	end
+
+	map("n", "<leader>ts", function()
+		local word = vim.fn.expand("<cword>")
+		local syns = _thesaurus_synonyms(word)
+		if #syns == 0 then
+			vim.notify("No synonyms found for: " .. word, vim.log.levels.INFO)
+			return
+		end
+
+		local pickers = require("telescope.pickers")
+		local finders = require("telescope.finders")
+		local conf = require("telescope.config").values
+		local actions = require("telescope.actions")
+		local action_state = require("telescope.actions.state")
+
+		pickers
+			.new(
+				require("telescope.themes").get_cursor({
+					previewer = false,
+					layout_config = { width = 50, height = 15 },
+				}),
+				{
+					prompt_title = "Synonyms: " .. word,
+					finder = finders.new_table({ results = syns }),
+					sorter = conf.generic_sorter({}),
+					attach_mappings = function(prompt_bufnr, _)
+						actions.select_default:replace(function()
+							local selection = action_state.get_selected_entry()
+							actions.close(prompt_bufnr)
+							if selection and selection[1] then
+								_replace_cword(selection[1])
+							end
+						end)
+						return true
+					end,
+				}
+			)
+			:find()
+	end, { remap = true }, "Synonyms (thesaurus)")
 	-- Search and file finding
 	map("n", "<CR>", "<cmd>noh<CR>", {}, "Clear search highlights")
 	map("n", "<C-p>", "<cmd>Telescope find_files<CR>", { remap = true }, "Find files")
