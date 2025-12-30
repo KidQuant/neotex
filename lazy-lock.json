@@ -20,7 +20,7 @@
   "jupytext.nvim": { "branch": "main", "commit": "c8baf3ad344c59b3abd461ecc17fc16ec44d0f7b" },
   "lazy.nvim": { "branch": "main", "commit": "306a05526ada86a7b30af95c5cc81ffba93fef97" },
   "lean.nvim": { "branch": "main", "commit": "d799fb2060c175ac86d5c3f629bf34e96a68b1db" },
-  "lectic": { "branch": "main", "commit": "c64bb623424db5344d22e1fdbc49641e73e310b3" },
+  "lectic": { "branch": "main", "commit": "0bf585c73c5d120bff79ea13aebbca41ffccbb94" },
   "lualine.nvim": { "branch": "master", "commit": "47f91c416daef12db467145e16bed5bbfe00add8" },
   "markdown-preview.nvim": { "branch": "master", "commit": "a923f5fc5ba36a3b17e289dc35dc17f66d0548ee" },
   "mason-lspconfig.nvim": { "branch": "main", "commit": "4cfe411526a7a99c18281135e8b4765ae6330d15" },
