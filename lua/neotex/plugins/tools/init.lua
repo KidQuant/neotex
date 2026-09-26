@@ -87,7 +87,6 @@ local luasnip_module = safe_require("neotex.plugins.tools.luasnip")
 local himalaya_module = safe_require("neotex.plugins.tools.himalaya-plugin")
 local worktree_module = safe_require("neotex.plugins.tools.worktree")
 local wezterm_module = safe_require("neotex.plugins.tools.wezterm-integration")
-local toggleterm_module = safe_require("neotex.plugins.tools.toggleterm")
 
 -- Create array of valid plugin specs
 local plugins = {}
@@ -110,7 +109,6 @@ add_if_valid(surround_module)
 add_if_valid(todo_comments_module)
 add_if_valid(yanky_module)
 add_if_valid(luasnip_module)
-add_if_valid(toggleterm_module)
 
 -- Himalaya returns a single spec, add it directly
 add_if_valid(himalaya_module)
